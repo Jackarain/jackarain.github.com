@@ -3,6 +3,7 @@ layout: default
 title: About Me
 ---
 
+##我的GITHUB
 github : <https://github.com/Jackarain>
 
 ##我的联系方式
