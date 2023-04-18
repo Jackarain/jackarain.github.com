@@ -1,7 +1,7 @@
 # standard jekyll configuration
 
 name: Jackarain
-url: http://jack.avplayer.org
+url: http://jack.p2sp.net
 description: Jack's blog
 
 permalink: date
@@ -10,12 +10,12 @@ markdown: rdiscount
 baseurl: /
 
 source: .
-destination: ./_site
-plugins: ./_plugins
+#destination: ./_site
+#plugins: ./_plugins
 
 # configuration required for some pages
 
-domain: jack.avplayer.org
+domain: jack.p2sp.net
 title: Jack's blog
 author: Jack
 email: jack.wgm@gmail.com
