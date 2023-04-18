@@ -18,7 +18,7 @@ description: A description about my blog homepage
   </ul>
 </div>
 <div id="pages">
-  <h2>Pages</h2>
+  <h2></h2>
   <ul>
     {% for page in site.html_pages %}
       {% if page.title %}

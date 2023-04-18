@@ -1,6 +1,6 @@
 ---
 layout: default
-title: About Me
+title: 关于我
 ---
 
 ### 喜欢c++/c语言，纯技术人，关注时事，关注开源！
