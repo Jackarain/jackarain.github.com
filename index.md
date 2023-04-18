@@ -5,7 +5,7 @@ description: A description about my blog homepage
 
 <div id="About">
 
-avplayer社区的最高司令官，喜欢c++/c语言，纯技术人，关注时事，关注开源！
+喜欢c++/c语言，纯技术人，关注时事，关注开源！
 
 </div>
 
