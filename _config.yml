@@ -1,7 +1,7 @@
 # standard jekyll configuration
 
 name: Jackarain
-url: http://jack.p2sp.net
+url: https://jackarain.org
 description: Jack's blog
 
 permalink: date
@@ -15,7 +15,7 @@ source: .
 
 # configuration required for some pages
 
-domain: jack.p2sp.net
+domain: jackarain.org
 title: Jack's blog
 author: Jack
 email: jack.wgm@gmail.com
