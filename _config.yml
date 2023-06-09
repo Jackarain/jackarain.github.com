@@ -21,6 +21,7 @@ author: Jack
 email: jack.wgm@gmail.com
 
 # configuration for ehancements, uncomment to enable
+future: true
 
 # feedburner:
 #   id: feedburnerid
