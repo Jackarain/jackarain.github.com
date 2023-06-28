@@ -9,6 +9,6 @@ title: 关于我
 github : <https://github.com/Jackarain>
 
 ## 我的联系方式
-Email: [jack.wgm AT gmail.com](mailto:jack.wgm@gmail.com)
+Email: [root AT jackarain.org](mailto:root@jackarain.org)
 
 
