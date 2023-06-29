@@ -5,7 +5,7 @@ description: A description about my blog homepage
 
 <div id="About">
 
-喜欢 c++ 语言，在这里记录一些所见和所思
+喜欢 c++ 语言，在这里记录一些所见和所思...
 
 </div>
 
