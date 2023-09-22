@@ -1,6 +1,6 @@
 ---
 layout: post
-title: c++ 中 if constexpr 的 always_false<T>
+title: c++ 中 if constexpr 的 `always_false<T>`
 ---
 
 在模板编程中，经常会用到 `if constexpr` 用来做类型判断，实现不同类型的代码匹配，所以当模板传的不支持的类型的时候，通常会使用 `static_assert` 来实现编译时断言，通常情况如下：
