@@ -7,7 +7,14 @@ title: 关于 c++ asio 性能小记
 
 一、尽量使用 `io_context` 池，并将每个 `io_context` 运行在单线程中，这样可以完全以单线程编程来处理 `io` 事件，从而避免锁，但需要注意 `io_context` 池均匀分配给 `io` 对象（通常使用 `round robin` 算法），避免线程发生饥饿的情况。在 `io_context` 构造时，需要注意设置恰当的 `concurrency_hint` 参数（ 参考文档: [https://www.boost.org/doc/libs/1_83_0/doc/html/boost_asio/overview/core/concurrency_hint.html](https://www.boost.org/doc/libs/1_83_0/doc/html/boost_asio/overview/core/concurrency_hint.html)），这有非常助于提高性能。
 
-二、定制 `allocator` 以避免 `asio` 内部 `handler` 的 `op` 对象动态内存分配。
+二、定制用户自己的 `allocator` 以避免 `asio` 内部 `handler` 的 `op` 对象动态内存分配，具体可参考文档：[https://www.boost.org/doc/libs/1_83_0/doc/html/boost_asio/overview/model/allocators.html](https://www.boost.org/doc/libs/1_83_0/doc/html/boost_asio/overview/model/allocators.html)  
+具体来说：  
+有的`op`不需要额外的内存，因为它们已经有了自己的储存空间。  
+有的`op`需要一个固定大小的内存块。  
+有的`op`则需要一个大小可以变的内存块。  
+有的`op`同时需要多个内存块。  
+还有的`op`先后需要不同大小的内存块。  
+但无论是上面哪种情况，通过定制的 `allocator` 便可完全自如的处理 `asio` 内存分配事宜，参考示例：[https://www.boost.org/doc/libs/1_83_0/doc/html/boost_asio/example/cpp11/allocation/server.cpp](https://www.boost.org/doc/libs/1_83_0/doc/html/boost_asio/example/cpp11/allocation/server.cpp)
 
 三、非紧急事件投递可使用 `defer` 而非 `post`。
 
