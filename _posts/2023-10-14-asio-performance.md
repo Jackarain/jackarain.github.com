@@ -12,6 +12,7 @@ title: 关于 c++ asio 性能小记
 三、非紧急事件投递可使用 `defer` 而非 `post`。
 
 四、在编写 `tcp server` 时 `listen` 设置恰当的 `backlog`（默认使用 `asio::socket_base::max_listen_connections` 即可）。另外重要的是，同时多次投递 `async_accept` 十分有助于大量客户端频繁连接，单个 `async_accept` 往往会在响应 `handle_accept` 之时，此时无法及时响应客户端的 `connect` 请求。
+参考文章：https://www.jackarain.org/2023/06/14/asio-acceptor-performance.html
 
 五、在使用 `asio` 进行 `udp` 异步编程时，同时多次调用 `async_receive_from` 可大大提高吞吐量。
 
@@ -20,6 +21,8 @@ title: 关于 c++ asio 性能小记
 七、使用 `io_context.poll()` 而非 `io_context.run()`，可以牺牲 `CPU` 来提高响应速度。
 
 八、慎用 `strand`，如无必要不要盲目使用 `strand`，它主要是被设计在多线程环境中（通常是单个 `io_context` 运行在多线程），可以保证在其上的异步操作串行化而非加锁，而它在单线程中则没有必要。
+
+九、传输大量数据时，使用自定义的 `transfer_at_least` 来提升效率，参考文章：https://www.jackarain.org/2023/06/13/asio-transfer_at_least-performance.html
 
 
 暂时只想到这些，以后想到了再更新，以上可根据需要做取舍。
