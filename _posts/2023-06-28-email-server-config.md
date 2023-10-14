@@ -37,7 +37,7 @@ docker compose -p mailu up -d
 docker compose -p mailu exec admin flask mailu admin admin jackarain.org PASSWORD
 ```
 
-其中的 `PASSWORD` 替换为自己的密码
+其中的 `PASSWORD` 替换为自己的密码，登陆用户名为 admin
 
 此时服务器配置完成。
 
@@ -54,3 +54,4 @@ DNS 相关的配置：
 此时 `DNS` 相关配置完成，然后配置 `PTR` 记录，需要在 `VPS` 商的服务面板配置，找到配置 `PTR记录`
  的地方，将 `IP` 配置为 `mail.jackarain.org`
 
+在服务正常运行后，邮件客户端可以使用 `IMAP`，收发服务器使用：`jackarain.org`
