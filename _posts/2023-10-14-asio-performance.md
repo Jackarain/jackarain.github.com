@@ -31,6 +31,7 @@ title: 关于 c++ asio 性能小记
 
 九、传输大量数据时，使用自定义的 `transfer_at_least` 来提升效率，参考文章：[https://www.jackarain.org/2023/06/13/asio-transfer_at_least-performance.html](https://www.jackarain.org/2023/06/13/asio-transfer_at_least-performance.html) 
 
+十、尽量将 `socket` 关闭操作让 `client` 主动发起，以避免服务器上产生过多的 `TIME_WAIT` 状态
 
 暂时只想到这些，以后想到了再更新，以上可根据需要做取舍。
 
