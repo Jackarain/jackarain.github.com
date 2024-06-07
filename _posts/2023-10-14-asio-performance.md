@@ -7,13 +7,13 @@ title: 关于 c++ asio 性能小记
 
 一、尽量使用 `io_context` 池，并将每个 `io_context` 运行在单线程中，这样可以完全以单线程编程来处理 `io` 事件，从而避免锁，但需要注意 `io_context` 池均匀分配给 `io` 对象（通常使用 `round robin` 算法），避免线程发生饥饿的情况。在 `io_context` 构造时，需要注意设置恰当的 `concurrency_hint` 参数（ 参考文档: [https://www.boost.org/doc/libs/1_83_0/doc/html/boost_asio/overview/core/concurrency_hint.html](https://www.boost.org/doc/libs/1_83_0/doc/html/boost_asio/overview/core/concurrency_hint.html)），这有非常助于提高性能。
 
-二、定制用户自己的 `allocator` 以避免 `asio` 内部 `handler` 的 `op` 对象动态内存分配，具体可参考文档：[https://www.boost.org/doc/libs/1_83_0/doc/html/boost_asio/overview/core/allocation.html](https://www.boost.org/doc/libs/1_83_0/doc/html/boost_asio/overview/core/allocation.html)  
-具体来说：  
-有的`op`不需要额外的内存，因为它们已经有了自己的储存空间。  
-有的`op`需要一个固定大小的内存块。  
-有的`op`则需要一个大小可以变的内存块。  
-有的`op`同时需要多个内存块。  
-还有的`op`先后需要不同大小的内存块。  
+二、定制用户自己的 `allocator` 以避免 `asio` 内部 `handler` 的 `op` 对象动态内存分配，具体可参考文档：[https://www.boost.org/doc/libs/1_83_0/doc/html/boost_asio/overview/core/allocation.html](https://www.boost.org/doc/libs/1_83_0/doc/html/boost_asio/overview/core/allocation.html)
+具体来说：
+有的`op`不需要额外的内存，因为它们已经有了自己的储存空间。
+有的`op`需要一个固定大小的内存块。
+有的`op`则需要一个大小可以变的内存块。
+有的`op`同时需要多个内存块。
+还有的`op`先后需要不同大小的内存块。
 但无论是上面哪种情况，通过定制的 `allocator` 便可完全自如的处理 `asio` 内存分配事宜，参考示例：[https://www.boost.org/doc/libs/1_83_0/doc/html/boost_asio/example/cpp11/allocation/server.cpp](https://www.boost.org/doc/libs/1_83_0/doc/html/boost_asio/example/cpp11/allocation/server.cpp)
 
 三、非紧急事件投递可使用 `defer` 而非 `post`。
@@ -29,9 +29,8 @@ title: 关于 c++ asio 性能小记
 
 八、慎用 `strand`，如无必要不要盲目使用 `strand`，它主要是被设计在多线程环境中（通常是单个 `io_context` 运行在多线程），可以保证在其上的异步操作串行化而非加锁，而它在单线程中则没有必要。
 
-九、传输大量数据时，使用自定义的 `transfer_at_least` 来提升效率，参考文章：[https://www.jackarain.org/2023/06/13/asio-transfer_at_least-performance.html](https://www.jackarain.org/2023/06/13/asio-transfer_at_least-performance.html) 
+九、传输大量数据时，使用自定义的 `transfer_at_least` 来提升效率，参考文章：[https://www.jackarain.org/2023/06/13/asio-transfer_at_least-performance.html](https://www.jackarain.org/2023/06/13/asio-transfer_at_least-performance.html)
 
 十、尽量将 `socket` 关闭操作让 `client` 主动发起，以避免服务器上产生过多的 `TIME_WAIT` 状态
 
 暂时只想到这些，以后想到了再更新，以上可根据需要做取舍。
-
