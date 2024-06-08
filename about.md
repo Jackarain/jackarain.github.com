@@ -12,3 +12,5 @@ github : <https://github.com/Jackarain>
 ## 我的联系方式
 
 Email: [root AT jackarain.org](mailto:root@jackarain.org)
+
+Telegram: <https://t.me/jackarain>
