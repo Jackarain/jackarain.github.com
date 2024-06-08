@@ -3,11 +3,6 @@ layout: default
 description: A description about my blog homepage
 ---
 
-<div id="About">
-
-喜欢 c++ 语言，在这里记录一些所见和所思...
-
-</div>
 
 <div id="posts">
   <h2>日志</h2>
@@ -27,3 +22,4 @@ description: A description about my blog homepage
     {% endfor %}
   </ul>
 </div>
+

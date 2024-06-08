@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/assets/css/style.css?v=">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup theme-color -->
+<!-- start theme color meta headers -->
+<meta name="theme-color" content="#151515">
+<meta name="msapplication-navbutton-color" content="#151515">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- end theme color meta headers -->
+
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Reed Solomon 纠删码的详细过程 | Jackarain 的 blog</title>
+<meta name="generator" content="Jekyll v4.3.3" />
+<meta property="og:title" content="Reed Solomon 纠删码的详细过程" />
+<meta name="author" content="Jack" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="首先根据输入数据，我这里演示数据为 {9,7,3,4}，然后生成矩阵： { {1,0,0,0}, {0,1,0,0}, {0,0,1,0}, {0,0,0,1}, {1,1,1,1}, {1,2,4,8} } 然后使用这个矩阵与输入数据做矩阵相乘： ``` { {1,0,0,0}, {0,1,0,0}, {0,0,1,0}, {0,0,0,1}, {1,1,1,1}, {1,2,4,8} }" />
+<meta property="og:description" content="首先根据输入数据，我这里演示数据为 {9,7,3,4}，然后生成矩阵： { {1,0,0,0}, {0,1,0,0}, {0,0,1,0}, {0,0,0,1}, {1,1,1,1}, {1,2,4,8} } 然后使用这个矩阵与输入数据做矩阵相乘： ``` { {1,0,0,0}, {0,1,0,0}, {0,0,1,0}, {0,0,0,1}, {1,1,1,1}, {1,2,4,8} }" />
+<link rel="canonical" href="http://0.0.0.0:4000/2023/04/29/reedsolomon.html" />
+<meta property="og:url" content="http://0.0.0.0:4000/2023/04/29/reedsolomon.html" />
+<meta property="og:site_name" content="Jackarain 的 blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-04-29T00:00:00+08:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Reed Solomon 纠删码的详细过程" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Jack"},"dateModified":"2023-04-29T00:00:00+08:00","datePublished":"2023-04-29T00:00:00+08:00","description":"首先根据输入数据，我这里演示数据为 {9,7,3,4}，然后生成矩阵： { {1,0,0,0}, {0,1,0,0}, {0,0,1,0}, {0,0,0,1}, {1,1,1,1}, {1,2,4,8} } 然后使用这个矩阵与输入数据做矩阵相乘： ``` { {1,0,0,0}, {0,1,0,0}, {0,0,1,0}, {0,0,0,1}, {1,1,1,1}, {1,2,4,8} }","headline":"Reed Solomon 纠删码的详细过程","mainEntityOfPage":{"@type":"WebPage","@id":"http://0.0.0.0:4000/2023/04/29/reedsolomon.html"},"url":"http://0.0.0.0:4000/2023/04/29/reedsolomon.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+  <body>
+
+    <header>
+      <div class="container">
+        <a id="a-title" href="/">
+          <h1>Jackarain 的 blog</h1>
+	  <h2> 喜欢 c++ 语言，在这里记录一些所见和所思... </h2>
+        </a>
+      </div>
+    </header>
+
+    <div class="container">
+      <section id="main_content">
+        <h1>Reed Solomon 纠删码的详细过程</h1>
+<small>29 April 2023</small>
+<p class="view"><br></p>
+
+<div class="post">
+<p>首先根据输入数据，我这里演示数据为 {9,7,3,4}，然后生成矩阵：</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{
+  {1,0,0,0},
+  {0,1,0,0},
+  {0,0,1,0},
+  {0,0,0,1},
+  {1,1,1,1},
+  {1,2,4,8}
+}
+</code></pre></div></div>
+<p>然后使用这个矩阵与输入数据做矩阵相乘：</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{
+  {1,0,0,0},
+  {0,1,0,0},
+  {0,0,1,0},
+  {0,0,0,1},
+  {1,1,1,1},
+  {1,2,4,8}
+}
+
+*
+
+{9,7,3,4}
+
+=
+
+{9,7,3,4,23,67}
+</code></pre></div></div>
+<p>经过上面计算，得到：<code class="language-plaintext highlighter-rouge">{9,7,3,4,23,67}</code></p>
+
+<p>其中末尾 <code class="language-plaintext highlighter-rouge">23, 67</code> 即是我们的冗余数据, 可用于恢复输入数据中任意丢失的2份数据。</p>
+
+<p>这里假设 <code class="language-plaintext highlighter-rouge">9, 3</code> 丢失: <code class="language-plaintext highlighter-rouge">{x,7,x,4,23,67}</code>，先根据之前的矩阵，去掉丢失所对应的行：</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{
+# {1,0,0,0},
+  {0,1,0,0},
+# {0,0,1,0},
+  {0,0,0,1},
+  {1,1,1,1},
+  {1,2,4,8}
+}
+
+即：
+
+{
+  {0,1,0,0},
+  {0,0,0,1},
+  {1,1,1,1},
+  {1,2,4,8}
+}
+</code></pre></div></div>
+<p>然后对这个矩阵进行反转，得到逆矩阵：</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{
+  {-2/3,4/3,4/3,-1/3},
+  {1,0,0,0},
+  {-1/3,-7/3,-1/3,1/3},
+  {0,1,0,0}
+}
+</code></pre></div></div>
+<p>使用这个逆矩阵与接收到的数据相乘：</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{
+  {-2/3,4/3,4/3,-1/3},
+  {1,0,0,0},
+  {-1/3,-7/3,-1/3,1/3},
+  {0,1,0,0}
+}
+
+*
+
+{7,4,23,67}
+</code></pre></div></div>
+<p>得到完整的数据还原：</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{9,7,3,4}
+</code></pre></div></div>
+
+<p>上面过程，这里我使用 python 来简单模拟一下整个过程：</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="n">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="c1">#测试数据
+</span><span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="p">.</span><span class="nf">array</span><span class="p">([</span><span class="mi">9</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">])</span>
+<span class="c1">#创立矩阵：
+</span><span class="n">vandermonde</span><span class="o">=</span><span class="n">np</span><span class="p">.</span><span class="nf">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">8</span><span class="p">]])</span>
+<span class="c1">#计算parity, parity=[9,7,3,4,23,67]
+</span><span class="n">parity</span><span class="o">=</span><span class="n">np</span><span class="p">.</span><span class="nf">dot</span><span class="p">(</span><span class="n">vandermonde</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span> 
+
+<span class="c1">#假设9，3丢失，删除矩阵中对应行，然后建立逆矩阵。
+</span><span class="n">lost</span><span class="o">=</span><span class="n">np</span><span class="p">.</span><span class="nf">array</span><span class="p">([</span><span class="mi">7</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">23</span><span class="p">,</span><span class="mi">67</span><span class="p">])</span>
+<span class="n">vandermonde_inv</span><span class="o">=</span><span class="n">np</span><span class="p">.</span><span class="nf">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">8</span><span class="p">]])</span>
+<span class="n">vandermonde_inv</span><span class="o">=</span><span class="n">np</span><span class="p">.</span><span class="n">linalg</span><span class="p">.</span><span class="nf">inv</span><span class="p">(</span><span class="n">vandermonde_inv</span><span class="p">)</span>
+
+<span class="c1">#恢复数据result=[9,7,3,4]
+</span><span class="n">result</span><span class="o">=</span><span class="n">np</span><span class="p">.</span><span class="nf">dot</span><span class="p">(</span><span class="n">vandermonde_inv</span><span class="p">,</span><span class="n">lost</span><span class="p">)</span>
+</code></pre></div></div>
+
+</div>
+
+<div id="related">
+  <h2>Related Posts</h2>
+  <ul class="posts">
+    
+      <li><span>07 Jun 2024</span> - <a href="/2024/06/07/network-library-design.html">网络库常见的糟糕设计有哪些</a></li>
+    
+      <li><span>14 Oct 2023</span> - <a href="/2023/10/14/asio-performance.html">关于 c++ asio 性能小记</a></li>
+    
+      <li><span>22 Sep 2023</span> - <a href="/2023/09/22/static_assert.html">c++ 中 if constexpr 的 always_false</a></li>
+    
+      <li><span>28 Jun 2023</span> - <a href="/2023/06/28/email-server-config.html">搭建自己的邮件服务</a></li>
+    
+      <li><span>14 Jun 2023</span> - <a href="/2023/06/14/asio-acceptor-performance.html">关于在 asio 使用 tcp::acceptor 时性能优化</a></li>
+    
+  </ul>
+</div>
+
+
+<br />
+<br />
+<hr />
+<div id="comments">
+  <h2>Comments</h2>
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+    var disqus_identifier = "/2023/04/29/reedsolomon.html";
+    (function() {
+     var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+     dsq.src = '//jack.disqus.com/embed.js';
+     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript=jack">comments powered by Disqus.</a></noscript>
+  <a href="https://disqus.com" class="dsq-brlink">blog comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+
+
+
+      </section>
+    </div>
+  </body>
+</html>

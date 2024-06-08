@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/assets/css/style.css?v=">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup theme-color -->
+<!-- start theme color meta headers -->
+<meta name="theme-color" content="#151515">
+<meta name="msapplication-navbutton-color" content="#151515">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- end theme color meta headers -->
+
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>关于在 asio 使用 transfer_at_least 数据传输时性能优化 | Jackarain 的 blog</title>
+<meta name="generator" content="Jekyll v4.3.3" />
+<meta property="og:title" content="关于在 asio 使用 transfer_at_least 数据传输时性能优化" />
+<meta name="author" content="Jack" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="在使用 asio::async_read 来接收大量数据的时候，使用 transfer_at_least 来设定最少接收数据量，但是 asio 默 认的 transfer_at_least 实现每次最大读取 64k, 这在传输大流量的时候，是极为不合适的，会极大的影响数据接收性能。 所以我们可以自己定制一个 transfer_at_least 来取代 asio 默认的 transfer_at_least 函数，实现如下：" />
+<meta property="og:description" content="在使用 asio::async_read 来接收大量数据的时候，使用 transfer_at_least 来设定最少接收数据量，但是 asio 默 认的 transfer_at_least 实现每次最大读取 64k, 这在传输大流量的时候，是极为不合适的，会极大的影响数据接收性能。 所以我们可以自己定制一个 transfer_at_least 来取代 asio 默认的 transfer_at_least 函数，实现如下：" />
+<link rel="canonical" href="http://0.0.0.0:4000/2023/06/13/asio-transfer_at_least-performance.html" />
+<meta property="og:url" content="http://0.0.0.0:4000/2023/06/13/asio-transfer_at_least-performance.html" />
+<meta property="og:site_name" content="Jackarain 的 blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-06-13T00:00:00+08:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="关于在 asio 使用 transfer_at_least 数据传输时性能优化" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Jack"},"dateModified":"2023-06-13T00:00:00+08:00","datePublished":"2023-06-13T00:00:00+08:00","description":"在使用 asio::async_read 来接收大量数据的时候，使用 transfer_at_least 来设定最少接收数据量，但是 asio 默 认的 transfer_at_least 实现每次最大读取 64k, 这在传输大流量的时候，是极为不合适的，会极大的影响数据接收性能。 所以我们可以自己定制一个 transfer_at_least 来取代 asio 默认的 transfer_at_least 函数，实现如下：","headline":"关于在 asio 使用 transfer_at_least 数据传输时性能优化","mainEntityOfPage":{"@type":"WebPage","@id":"http://0.0.0.0:4000/2023/06/13/asio-transfer_at_least-performance.html"},"url":"http://0.0.0.0:4000/2023/06/13/asio-transfer_at_least-performance.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+  <body>
+
+    <header>
+      <div class="container">
+        <a id="a-title" href="/">
+          <h1>Jackarain 的 blog</h1>
+	  <h2> 喜欢 c++ 语言，在这里记录一些所见和所思... </h2>
+        </a>
+      </div>
+    </header>
+
+    <div class="container">
+      <section id="main_content">
+        <h1>关于在 asio 使用 transfer_at_least 数据传输时性能优化</h1>
+<small>13 June 2023</small>
+<p class="view"><br></p>
+
+<div class="post">
+<p>在使用 <code class="language-plaintext highlighter-rouge">asio::async_read</code> 来接收大量数据的时候，使用 <code class="language-plaintext highlighter-rouge">transfer_at_least</code> 来设定最少接收数据量，但是 <code class="language-plaintext highlighter-rouge">asio</code> 默
+认的 <code class="language-plaintext highlighter-rouge">transfer_at_least</code> 实现每次最大读取 <code class="language-plaintext highlighter-rouge">64k</code>, 这在传输大流量的时候，是极为不合适的，会极大的影响数据接收性能。
+所以我们可以自己定制一个 <code class="language-plaintext highlighter-rouge">transfer_at_least</code> 来取代 <code class="language-plaintext highlighter-rouge">asio</code> 默认的 <code class="language-plaintext highlighter-rouge">transfer_at_least</code> 函数，实现如下：</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">static</span> <span class="n">std</span><span class="o">::</span><span class="kt">size_t</span> <span class="n">custom_default_transfer_size</span> <span class="o">=</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">;</span>
+	<span class="k">class</span> <span class="nc">transfer_at_least_t</span>
+	<span class="p">{</span>
+	<span class="nl">public:</span>
+		<span class="k">typedef</span> <span class="n">std</span><span class="o">::</span><span class="kt">size_t</span> <span class="n">result_type</span><span class="p">;</span>
+
+		<span class="k">explicit</span> <span class="n">transfer_at_least_t</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span> <span class="n">minimum</span><span class="p">)</span>
+			<span class="o">:</span> <span class="n">minimum_</span><span class="p">(</span><span class="n">minimum</span><span class="p">)</span>
+		<span class="p">{</span>
+		<span class="p">}</span>
+
+		<span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">Error</span><span class="p">&gt;</span>
+		<span class="n">std</span><span class="o">::</span><span class="kt">size_t</span> <span class="nf">operator</span><span class="p">()(</span><span class="k">const</span> <span class="n">Error</span><span class="o">&amp;</span> <span class="n">err</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="kt">size_t</span> <span class="n">bytes_transferred</span><span class="p">)</span>
+		<span class="p">{</span>
+			<span class="k">return</span> <span class="p">(</span><span class="o">!!</span><span class="n">err</span> <span class="o">||</span> <span class="n">bytes_transferred</span> <span class="o">&gt;=</span> <span class="n">minimum_</span><span class="p">)</span>
+				<span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="n">custom_default_transfer_size</span><span class="p">;</span>
+		<span class="p">}</span>
+
+	<span class="k">private</span><span class="o">:</span>
+		<span class="n">std</span><span class="o">::</span><span class="kt">size_t</span> <span class="n">minimum_</span><span class="p">;</span>
+	<span class="p">};</span>
+
+	<span class="kr">inline</span> <span class="n">transfer_at_least_t</span> <span class="nf">transfer_at_least</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span> <span class="n">minimum</span><span class="p">)</span>
+	<span class="p">{</span>
+		<span class="k">return</span> <span class="n">transfer_at_least_t</span><span class="p">(</span><span class="n">minimum</span><span class="p">);</span>
+	<span class="p">}</span>
+</code></pre></div></div>
+<p>上面代码中 <code class="language-plaintext highlighter-rouge">custom_default_transfer_size</code> 设置为 1M 大小用于默认接收缓冲大小，此时在 <code class="language-plaintext highlighter-rouge">asio::async_read</code> 函数中 <code class="language-plaintext highlighter-rouge">prepare</code> 将分配最大为 1M 的内存空间用于数据接收。</p>
+
+
+</div>
+
+<div id="related">
+  <h2>Related Posts</h2>
+  <ul class="posts">
+    
+      <li><span>07 Jun 2024</span> - <a href="/2024/06/07/network-library-design.html">网络库常见的糟糕设计有哪些</a></li>
+    
+      <li><span>14 Oct 2023</span> - <a href="/2023/10/14/asio-performance.html">关于 c++ asio 性能小记</a></li>
+    
+      <li><span>22 Sep 2023</span> - <a href="/2023/09/22/static_assert.html">c++ 中 if constexpr 的 always_false</a></li>
+    
+      <li><span>28 Jun 2023</span> - <a href="/2023/06/28/email-server-config.html">搭建自己的邮件服务</a></li>
+    
+      <li><span>14 Jun 2023</span> - <a href="/2023/06/14/asio-acceptor-performance.html">关于在 asio 使用 tcp::acceptor 时性能优化</a></li>
+    
+  </ul>
+</div>
+
+
+<br />
+<br />
+<hr />
+<div id="comments">
+  <h2>Comments</h2>
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+    var disqus_identifier = "/2023/06/13/asio-transfer_at_least-performance.html";
+    (function() {
+     var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+     dsq.src = '//jack.disqus.com/embed.js';
+     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript=jack">comments powered by Disqus.</a></noscript>
+  <a href="https://disqus.com" class="dsq-brlink">blog comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+
+
+
+      </section>
+    </div>
+  </body>
+</html>

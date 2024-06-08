@@ -1,33 +1,11 @@
-# standard jekyll configuration
-
-name: Jackarain
-url: https://jackarain.org
-description: Jack's blog
-
-permalink: date
-pygments: true
-markdown: rdiscount
-baseurl: /
-
-source: .
-#destination: ./_site
-#plugins: ./_plugins
-
-# configuration required for some pages
+title: Jackarain 的 blog
+description: Jackarain 的 blog
+google_analytics:
+theme: jekyll-theme-hacker
 
 domain: jackarain.org
-title: Jack's blog
 author: Jack
 email: jack.wgm@gmail.com
-
-# configuration for ehancements, uncomment to enable
-future: true
-
-# feedburner:
-#   id: feedburnerid
-
-# google_analytics:
-#   account: UA-XXXXX-X
 
 github:
    username: Jackarain

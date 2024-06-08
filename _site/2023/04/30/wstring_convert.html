@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/assets/css/style.css?v=">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup theme-color -->
+<!-- start theme color meta headers -->
+<meta name="theme-color" content="#151515">
+<meta name="msapplication-navbutton-color" content="#151515">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- end theme color meta headers -->
+
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>浅谈 std::wstring_convert 及 utf 编码转换 | Jackarain 的 blog</title>
+<meta name="generator" content="Jekyll v4.3.3" />
+<meta property="og:title" content="浅谈 std::wstring_convert 及 utf 编码转换" />
+<meta name="author" content="Jack" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="遇到了一个字符串编码问题，因为只是简单的 utf8/utf16 之间的转换，所以我没有打算依赖三方库，于是 google 了一圈看看 c++ 本身有没有什么解决方案，我找到了标准库中提供的 std::wstring_convert，简单看了一下，API 的设计并不复杂，使用起来也很方便，但是一到 MS 平台，VC 一个劲的警告我， std::wstring_convert 已经被弃用，好吧，于是再找找看有没有替代器，结果是没有！！！啥玩意？挖坑不填？？locale 算你狠！" />
+<meta property="og:description" content="遇到了一个字符串编码问题，因为只是简单的 utf8/utf16 之间的转换，所以我没有打算依赖三方库，于是 google 了一圈看看 c++ 本身有没有什么解决方案，我找到了标准库中提供的 std::wstring_convert，简单看了一下，API 的设计并不复杂，使用起来也很方便，但是一到 MS 平台，VC 一个劲的警告我， std::wstring_convert 已经被弃用，好吧，于是再找找看有没有替代器，结果是没有！！！啥玩意？挖坑不填？？locale 算你狠！" />
+<link rel="canonical" href="http://0.0.0.0:4000/2023/04/30/wstring_convert.html" />
+<meta property="og:url" content="http://0.0.0.0:4000/2023/04/30/wstring_convert.html" />
+<meta property="og:site_name" content="Jackarain 的 blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-04-30T00:00:00+08:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="浅谈 std::wstring_convert 及 utf 编码转换" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Jack"},"dateModified":"2023-04-30T00:00:00+08:00","datePublished":"2023-04-30T00:00:00+08:00","description":"遇到了一个字符串编码问题，因为只是简单的 utf8/utf16 之间的转换，所以我没有打算依赖三方库，于是 google 了一圈看看 c++ 本身有没有什么解决方案，我找到了标准库中提供的 std::wstring_convert，简单看了一下，API 的设计并不复杂，使用起来也很方便，但是一到 MS 平台，VC 一个劲的警告我， std::wstring_convert 已经被弃用，好吧，于是再找找看有没有替代器，结果是没有！！！啥玩意？挖坑不填？？locale 算你狠！","headline":"浅谈 std::wstring_convert 及 utf 编码转换","mainEntityOfPage":{"@type":"WebPage","@id":"http://0.0.0.0:4000/2023/04/30/wstring_convert.html"},"url":"http://0.0.0.0:4000/2023/04/30/wstring_convert.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+  <body>
+
+    <header>
+      <div class="container">
+        <a id="a-title" href="/">
+          <h1>Jackarain 的 blog</h1>
+	  <h2> 喜欢 c++ 语言，在这里记录一些所见和所思... </h2>
+        </a>
+      </div>
+    </header>
+
+    <div class="container">
+      <section id="main_content">
+        <h1>浅谈 std::wstring_convert 及 utf 编码转换</h1>
+<small>30 April 2023</small>
+<p class="view"><br></p>
+
+<div class="post">
+<p>遇到了一个字符串编码问题，因为只是简单的 <code class="language-plaintext highlighter-rouge">utf8/utf16</code> 之间的转换，所以我没有打算依赖三方库，于是 google 了一圈看看 c++ 本身有没有什么解决方案，我找到了标准库中提供的 <code class="language-plaintext highlighter-rouge">std::wstring_convert</code>，简单看了一下，API 的设计并不复杂，使用起来也很方便，但是一到 MS 平台，VC 一个劲的警告我， <code class="language-plaintext highlighter-rouge">std::wstring_convert</code> 已经被弃用，好吧，于是再找找看有没有替代器，结果是没有！！！啥玩意？挖坑不填？？<code class="language-plaintext highlighter-rouge">locale</code> 算你狠！</p>
+
+<p>好吧，研究了一下 <code class="language-plaintext highlighter-rouge">std::wstring_convert</code> 到底是有啥问题，我看到微软的 stl github 上有一个 issues： https://github.com/microsoft/STL/issues/443 ，说是有内存泄露，还提供了测试程序：</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
+#include</span> <span class="cpf">&lt;assert.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;locale&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span>
+<span class="kt">int</span> <span class="n">fancyAlive</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+<span class="k">class</span> <span class="nc">fancy_state</span> <span class="p">{};</span>
+<span class="k">class</span> <span class="nc">fancy_cvt</span> <span class="o">:</span> <span class="k">public</span> <span class="n">std</span><span class="o">::</span><span class="n">codecvt</span><span class="o">&lt;</span><span class="kt">wchar_t</span><span class="p">,</span> <span class="kt">char</span><span class="p">,</span> <span class="n">fancy_state</span><span class="o">&gt;</span> <span class="p">{</span>
+<span class="nl">public:</span>
+  <span class="k">explicit</span> <span class="n">fancy_cvt</span><span class="p">(</span><span class="kt">size_t</span> <span class="n">refs</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+      <span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">codecvt</span><span class="o">&lt;</span><span class="kt">wchar_t</span><span class="p">,</span> <span class="kt">char</span><span class="p">,</span> <span class="n">fancy_state</span><span class="o">&gt;</span><span class="p">(</span><span class="n">refs</span><span class="p">)</span> <span class="p">{</span>
+    <span class="o">++</span><span class="n">fancyAlive</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="o">~</span><span class="n">fancy_cvt</span><span class="p">()</span> <span class="p">{</span>
+    <span class="o">--</span><span class="n">fancyAlive</span><span class="p">;</span>
+    <span class="n">puts</span><span class="p">(</span><span class="s">"destroyed!"</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="n">fancy_cvt</span><span class="p">(</span><span class="k">const</span> <span class="n">fancy_cvt</span> <span class="o">&amp;</span><span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
+  <span class="n">fancy_cvt</span> <span class="o">&amp;</span><span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">fancy_cvt</span> <span class="o">&amp;</span><span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+  <span class="p">{</span>
+    <span class="n">fancy_cvt</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="k">new</span> <span class="n">fancy_cvt</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>
+    <span class="n">assert</span><span class="p">(</span><span class="n">fancyAlive</span> <span class="o">==</span> <span class="mi">1</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">wstring_convert</span><span class="o">&lt;</span><span class="n">fancy_cvt</span><span class="o">&gt;</span> <span class="n">cvt</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="n">assert</span><span class="p">(</span><span class="n">fancyAlive</span> <span class="o">==</span> <span class="mi">0</span><span class="p">);</span>
+  <span class="n">puts</span><span class="p">(</span><span class="s">"main() ending"</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>通过这段代码可以看到，<code class="language-plaintext highlighter-rouge">std::codecvt</code> 模板类内部有一个引用计数，<code class="language-plaintext highlighter-rouge">std::wstring_convert</code> 如果通过外部传递 <code class="language-plaintext highlighter-rouge">std::codecvt</code> 对象指针，那么它将在内部构造 <code class="language-plaintext highlighter-rouge">std::locale</code> 对象时直接使用外部传递的 <code class="language-plaintext highlighter-rouge">codecvt</code> 指针，当 <code class="language-plaintext highlighter-rouge">std::wstring_convert</code> 内部的 <code class="language-plaintext highlighter-rouge">std::locale</code> 析构的时候，<code class="language-plaintext highlighter-rouge">std::locale</code> 将自减它所保持的 <code class="language-plaintext highlighter-rouge">std::codecvt</code> 指针对象的引用计数，如果此时 <code class="language-plaintext highlighter-rouge">std::codecvt</code> 的引用计数不为 0，说明 <code class="language-plaintext highlighter-rouge">std::codecvt</code> 对象被 <code class="language-plaintext highlighter-rouge">std::locale</code> 之外持有，当然也不会析构 <code class="language-plaintext highlighter-rouge">std::codecvt</code>。</p>
+
+<p>看到这里大致明白了 <code class="language-plaintext highlighter-rouge">std::wstring_convert</code> 的问题所在，这个问题的解决方案，实际上只需要 <code class="language-plaintext highlighter-rouge">std::wstring_convert</code> 禁止外部传递 <code class="language-plaintext highlighter-rouge">std::codecvt</code> 指针，又或者外部直接传 <code class="language-plaintext highlighter-rouge">std::locale</code> 对象指针给 <code class="language-plaintext highlighter-rouge">std::wstring_convert</code> 对象，就可以解决，但无论如何做都会导致 ABI 或 API 变动导致兼容性问题，总之最后 <code class="language-plaintext highlighter-rouge">std::wstring_convert</code> 结果就是被弃用了，并无替代方案，但并不是 <code class="language-plaintext highlighter-rouge">std::wstring_convert</code> 目前不能用，只是使用它会收到一堆警告，其实真正做事的东西是 <code class="language-plaintext highlighter-rouge">std::codecvt</code>，自己实现一下也很简单，这样就可以避免编译器警告了，下面是我的一些实现：</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kr">inline</span> <span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">u16string</span><span class="o">&gt;</span> <span class="n">utf8_utf16</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">u8string_view</span> <span class="n">utf8</span><span class="p">)</span>
+<span class="p">{</span>
+	<span class="k">const</span> <span class="k">char8_t</span><span class="o">*</span> <span class="n">first</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">utf8</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+	<span class="k">const</span> <span class="k">char8_t</span><span class="o">*</span> <span class="n">last</span> <span class="o">=</span> <span class="n">first</span> <span class="o">+</span> <span class="n">utf8</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+
+	<span class="n">std</span><span class="o">::</span><span class="n">u16string</span> <span class="n">result</span><span class="p">(</span><span class="n">utf8</span><span class="p">.</span><span class="n">size</span><span class="p">(),</span> <span class="kt">char16_t</span><span class="p">{</span> <span class="mi">0</span> <span class="p">});</span>
+	<span class="kt">char16_t</span><span class="o">*</span> <span class="n">dest</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+	<span class="kt">char16_t</span><span class="o">*</span> <span class="n">next</span> <span class="o">=</span> <span class="nb">nullptr</span><span class="p">;</span>
+
+	<span class="k">using</span> <span class="n">codecvt_type</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">codecvt</span><span class="o">&lt;</span><span class="kt">char16_t</span><span class="p">,</span> <span class="k">char8_t</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="kt">mbstate_t</span><span class="o">&gt;</span><span class="p">;</span>
+
+	<span class="n">codecvt_type</span><span class="o">*</span> <span class="n">cvt</span> <span class="o">=</span> <span class="k">new</span> <span class="n">codecvt_type</span><span class="p">;</span>
+
+	<span class="c1">// manages reference to codecvt facet to free memory.</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">locale</span> <span class="n">loc</span><span class="p">;</span>
+	<span class="n">loc</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">locale</span><span class="p">(</span><span class="n">loc</span><span class="p">,</span> <span class="n">cvt</span><span class="p">);</span>
+
+	<span class="n">codecvt_type</span><span class="o">::</span><span class="n">state_type</span> <span class="n">state</span><span class="p">{};</span>
+
+	<span class="k">auto</span> <span class="n">ret</span> <span class="o">=</span> <span class="n">cvt</span><span class="o">-&gt;</span><span class="n">in</span><span class="p">(</span>
+		<span class="n">state</span><span class="p">,</span> <span class="n">first</span><span class="p">,</span> <span class="n">last</span><span class="p">,</span> <span class="n">first</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">dest</span> <span class="o">+</span> <span class="n">result</span><span class="p">.</span><span class="n">size</span><span class="p">(),</span> <span class="n">next</span><span class="p">);</span>
+	<span class="k">if</span> <span class="p">(</span><span class="n">ret</span> <span class="o">!=</span> <span class="n">codecvt_type</span><span class="o">::</span><span class="n">ok</span><span class="p">)</span>
+		<span class="k">return</span> <span class="p">{};</span>
+
+	<span class="n">result</span><span class="p">.</span><span class="n">resize</span><span class="p">(</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">size_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">next</span> <span class="o">-</span> <span class="n">dest</span><span class="p">));</span>
+	<span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kr">inline</span> <span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">u8string</span><span class="o">&gt;</span> <span class="n">utf16_utf8</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">u16string_view</span> <span class="n">utf16</span><span class="p">)</span>
+<span class="p">{</span>
+	<span class="k">const</span> <span class="kt">char16_t</span><span class="o">*</span> <span class="n">first</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">utf16</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+	<span class="k">const</span> <span class="kt">char16_t</span><span class="o">*</span> <span class="n">last</span> <span class="o">=</span> <span class="n">first</span> <span class="o">+</span> <span class="n">utf16</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+
+	<span class="n">std</span><span class="o">::</span><span class="n">u8string</span> <span class="n">result</span><span class="p">((</span><span class="n">utf16</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">6</span><span class="p">,</span> <span class="kt">char</span><span class="p">{</span> <span class="mi">0</span> <span class="p">});</span>
+	<span class="k">char8_t</span><span class="o">*</span> <span class="n">dest</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+	<span class="k">char8_t</span><span class="o">*</span> <span class="n">next</span> <span class="o">=</span> <span class="nb">nullptr</span><span class="p">;</span>
+
+	<span class="k">using</span> <span class="n">codecvt_type</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">codecvt</span><span class="o">&lt;</span><span class="kt">char16_t</span><span class="p">,</span> <span class="k">char8_t</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="kt">mbstate_t</span><span class="o">&gt;</span><span class="p">;</span>
+
+	<span class="n">codecvt_type</span><span class="o">*</span> <span class="n">cvt</span> <span class="o">=</span> <span class="k">new</span> <span class="n">codecvt_type</span><span class="p">;</span>
+	<span class="c1">// manages reference to codecvt facet to free memory.</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">locale</span> <span class="n">loc</span><span class="p">;</span>
+	<span class="n">loc</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">locale</span><span class="p">(</span><span class="n">loc</span><span class="p">,</span> <span class="n">cvt</span><span class="p">);</span>
+
+	<span class="n">codecvt_type</span><span class="o">::</span><span class="n">state_type</span> <span class="n">state</span><span class="p">{};</span>
+
+	<span class="k">auto</span> <span class="n">ret</span> <span class="o">=</span> <span class="n">cvt</span><span class="o">-&gt;</span><span class="n">out</span><span class="p">(</span>
+		<span class="n">state</span><span class="p">,</span> <span class="n">first</span><span class="p">,</span> <span class="n">last</span><span class="p">,</span> <span class="n">first</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">dest</span> <span class="o">+</span> <span class="n">result</span><span class="p">.</span><span class="n">size</span><span class="p">(),</span> <span class="n">next</span><span class="p">);</span>
+	<span class="k">if</span> <span class="p">(</span><span class="n">ret</span> <span class="o">!=</span> <span class="n">codecvt_type</span><span class="o">::</span><span class="n">ok</span><span class="p">)</span>
+		<span class="k">return</span> <span class="p">{};</span>
+
+	<span class="n">result</span><span class="p">.</span><span class="n">resize</span><span class="p">(</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">size_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">next</span> <span class="o">-</span> <span class="n">dest</span><span class="p">));</span>
+	<span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>补充一点，不得不说，<code class="language-plaintext highlighter-rouge">utf16</code> 是个垃圾，因为取值范围导致它不能完整包含 <code class="language-plaintext highlighter-rouge">unicode</code> 编码，现在的 <code class="language-plaintext highlighter-rouge">unicode</code> 编码大致有110多万吧，而 <code class="language-plaintext highlighter-rouge">utf16</code> 通常在编程中使用固定的 16 位（<code class="language-plaintext highlighter-rouge">wchar_t</code>）的编码，所以装下几个字符编码？65536？所以它不能完整表示所有 <code class="language-plaintext highlighter-rouge">unicode</code> 字符编码，以及不能与 <code class="language-plaintext highlighter-rouge">utf8</code> 完全映射（<code class="language-plaintext highlighter-rouge">utf8</code> 编码空间巨大），而且 <code class="language-plaintext highlighter-rouge">utf16</code> 因为是双字节，存储/读取的时候，还需要注意字节序。</p>
+
+<p>而 <code class="language-plaintext highlighter-rouge">utf8</code> 编码空间十分巨大，远超 <code class="language-plaintext highlighter-rouge">unicode</code> 而且没有字节序的问题，而且完美兼容 <code class="language-plaintext highlighter-rouge">ascii</code> 编码，但也由于它是变长编码，所以缺点就是在做字节串查找的时候，需要解析 <code class="language-plaintext highlighter-rouge">utf8</code> 编码后才能很好的做匹配。</p>
+
+<p>另外：关于网上流传的 <code class="language-plaintext highlighter-rouge">std::wstring_convert</code> 确实存在问题，但主要是设计问题导致有可能内存泄露，而 <code class="language-plaintext highlighter-rouge">std::codecvt</code> 在处理 <code class="language-plaintext highlighter-rouge">utf8/utf16</code> 转换上是没有问题的，为了打消疑虑，我亲自验证了整个 <code class="language-plaintext highlighter-rouge">utf16</code> 编码所转换出的 <code class="language-plaintext highlighter-rouge">utf8</code>，没有发现任何问题。</p>
+
+
+</div>
+
+<div id="related">
+  <h2>Related Posts</h2>
+  <ul class="posts">
+    
+      <li><span>07 Jun 2024</span> - <a href="/2024/06/07/network-library-design.html">网络库常见的糟糕设计有哪些</a></li>
+    
+      <li><span>14 Oct 2023</span> - <a href="/2023/10/14/asio-performance.html">关于 c++ asio 性能小记</a></li>
+    
+      <li><span>22 Sep 2023</span> - <a href="/2023/09/22/static_assert.html">c++ 中 if constexpr 的 always_false</a></li>
+    
+      <li><span>28 Jun 2023</span> - <a href="/2023/06/28/email-server-config.html">搭建自己的邮件服务</a></li>
+    
+      <li><span>14 Jun 2023</span> - <a href="/2023/06/14/asio-acceptor-performance.html">关于在 asio 使用 tcp::acceptor 时性能优化</a></li>
+    
+  </ul>
+</div>
+
+
+<br />
+<br />
+<hr />
+<div id="comments">
+  <h2>Comments</h2>
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+    var disqus_identifier = "/2023/04/30/wstring_convert.html";
+    (function() {
+     var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+     dsq.src = '//jack.disqus.com/embed.js';
+     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript=jack">comments powered by Disqus.</a></noscript>
+  <a href="https://disqus.com" class="dsq-brlink">blog comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+
+
+
+      </section>
+    </div>
+  </body>
+</html>

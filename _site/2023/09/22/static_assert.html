@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/assets/css/style.css?v=">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup theme-color -->
+<!-- start theme color meta headers -->
+<meta name="theme-color" content="#151515">
+<meta name="msapplication-navbutton-color" content="#151515">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- end theme color meta headers -->
+
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>c++ 中 if constexpr 的 always_false | Jackarain 的 blog</title>
+<meta name="generator" content="Jekyll v4.3.3" />
+<meta property="og:title" content="c++ 中 if constexpr 的 always_false" />
+<meta name="author" content="Jack" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="在模板编程中，经常会用到 if constexpr 用来做类型判断，实现不同类型的代码匹配，所以当模板传的不支持的类型的时候，通常会使用 static_assert 来实现编译时断言，通常情况如下： template &lt;typename T&gt; void foo() { if constexpr (std::is_same_v&lt;T, int&gt;) { //... } else if constexpr (std::is_same_v&lt;T, float&gt;) { // ... } else { static_assert(...); } } 那么上面的 static_assert 应该怎么写呢？static_assert 的判定条件需要依赖类型 T，所以需要实现一个在 else 中始终为 false 的 constexpr 条件表达式，所以这里直接写 false 肯定不行，通常定义为： template &lt;typename T&gt; struct always_false : std::false_type {}; 或 template&lt;class ... T&gt; inline constexpr bool always_false = false; 这样使用的时候，就可以像下面这样使用： static_assert(always_false&lt;T&gt;::value, &quot;...&quot;); 或 static_assert(always_false&lt;T&gt;, &quot;...&quot;); 这个语义十分清楚，但这也有一个缺点，因为这个 always_false 一般会被定义在项目中的一个公共头文件中，整个项目中都会使用到它，这时如果引入的一个三方项目，很容易碰到相同的 always_false 定义，这个时候就会有点麻烦了，那么怎么做会避免这种情况发生呢？很简单，不再自己定义 always_false，我的解决方法如下： static_assert(!std::is_same_v&lt;T, T&gt;, &quot;...&quot;); 其中条件为 !std::is_same_v&lt;T, T&gt; 这样它同 always_false 一样始终将为 false 的常量表达式，且不再需要自己去定义那个到处被用到的 always_false 类型，唯一不足的是降低了一点可读性。" />
+<meta property="og:description" content="在模板编程中，经常会用到 if constexpr 用来做类型判断，实现不同类型的代码匹配，所以当模板传的不支持的类型的时候，通常会使用 static_assert 来实现编译时断言，通常情况如下： template &lt;typename T&gt; void foo() { if constexpr (std::is_same_v&lt;T, int&gt;) { //... } else if constexpr (std::is_same_v&lt;T, float&gt;) { // ... } else { static_assert(...); } } 那么上面的 static_assert 应该怎么写呢？static_assert 的判定条件需要依赖类型 T，所以需要实现一个在 else 中始终为 false 的 constexpr 条件表达式，所以这里直接写 false 肯定不行，通常定义为： template &lt;typename T&gt; struct always_false : std::false_type {}; 或 template&lt;class ... T&gt; inline constexpr bool always_false = false; 这样使用的时候，就可以像下面这样使用： static_assert(always_false&lt;T&gt;::value, &quot;...&quot;); 或 static_assert(always_false&lt;T&gt;, &quot;...&quot;); 这个语义十分清楚，但这也有一个缺点，因为这个 always_false 一般会被定义在项目中的一个公共头文件中，整个项目中都会使用到它，这时如果引入的一个三方项目，很容易碰到相同的 always_false 定义，这个时候就会有点麻烦了，那么怎么做会避免这种情况发生呢？很简单，不再自己定义 always_false，我的解决方法如下： static_assert(!std::is_same_v&lt;T, T&gt;, &quot;...&quot;); 其中条件为 !std::is_same_v&lt;T, T&gt; 这样它同 always_false 一样始终将为 false 的常量表达式，且不再需要自己去定义那个到处被用到的 always_false 类型，唯一不足的是降低了一点可读性。" />
+<link rel="canonical" href="http://0.0.0.0:4000/2023/09/22/static_assert.html" />
+<meta property="og:url" content="http://0.0.0.0:4000/2023/09/22/static_assert.html" />
+<meta property="og:site_name" content="Jackarain 的 blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-09-22T00:00:00+08:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="c++ 中 if constexpr 的 always_false" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Jack"},"dateModified":"2023-09-22T00:00:00+08:00","datePublished":"2023-09-22T00:00:00+08:00","description":"在模板编程中，经常会用到 if constexpr 用来做类型判断，实现不同类型的代码匹配，所以当模板传的不支持的类型的时候，通常会使用 static_assert 来实现编译时断言，通常情况如下： template &lt;typename T&gt; void foo() { if constexpr (std::is_same_v&lt;T, int&gt;) { //... } else if constexpr (std::is_same_v&lt;T, float&gt;) { // ... } else { static_assert(...); } } 那么上面的 static_assert 应该怎么写呢？static_assert 的判定条件需要依赖类型 T，所以需要实现一个在 else 中始终为 false 的 constexpr 条件表达式，所以这里直接写 false 肯定不行，通常定义为： template &lt;typename T&gt; struct always_false : std::false_type {}; 或 template&lt;class ... T&gt; inline constexpr bool always_false = false; 这样使用的时候，就可以像下面这样使用： static_assert(always_false&lt;T&gt;::value, &quot;...&quot;); 或 static_assert(always_false&lt;T&gt;, &quot;...&quot;); 这个语义十分清楚，但这也有一个缺点，因为这个 always_false 一般会被定义在项目中的一个公共头文件中，整个项目中都会使用到它，这时如果引入的一个三方项目，很容易碰到相同的 always_false 定义，这个时候就会有点麻烦了，那么怎么做会避免这种情况发生呢？很简单，不再自己定义 always_false，我的解决方法如下： static_assert(!std::is_same_v&lt;T, T&gt;, &quot;...&quot;); 其中条件为 !std::is_same_v&lt;T, T&gt; 这样它同 always_false 一样始终将为 false 的常量表达式，且不再需要自己去定义那个到处被用到的 always_false 类型，唯一不足的是降低了一点可读性。","headline":"c++ 中 if constexpr 的 always_false","mainEntityOfPage":{"@type":"WebPage","@id":"http://0.0.0.0:4000/2023/09/22/static_assert.html"},"url":"http://0.0.0.0:4000/2023/09/22/static_assert.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+  <body>
+
+    <header>
+      <div class="container">
+        <a id="a-title" href="/">
+          <h1>Jackarain 的 blog</h1>
+	  <h2> 喜欢 c++ 语言，在这里记录一些所见和所思... </h2>
+        </a>
+      </div>
+    </header>
+
+    <div class="container">
+      <section id="main_content">
+        <h1>c++ 中 if constexpr 的 always_false</h1>
+<small>22 September 2023</small>
+<p class="view"><br></p>
+
+<div class="post">
+<p>在模板编程中，经常会用到 <code class="language-plaintext highlighter-rouge">if constexpr</code> 用来做类型判断，实现不同类型的代码匹配，所以当模板传的不支持的类型的时候，通常会使用 <code class="language-plaintext highlighter-rouge">static_assert</code> 来实现编译时断言，通常情况如下：</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="kt">void</span> <span class="nf">foo</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="k">constexpr</span> <span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">is_same_v</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">//...</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nf">constexpr</span> <span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">is_same_v</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="kt">float</span><span class="o">&gt;</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// ...</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="k">static_assert</span><span class="p">(...);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>那么上面的 <code class="language-plaintext highlighter-rouge">static_assert</code> 应该怎么写呢？<code class="language-plaintext highlighter-rouge">static_assert</code> 的判定条件需要依赖类型 T，所以需要实现一个在 <code class="language-plaintext highlighter-rouge">else</code> 中始终为 <code class="language-plaintext highlighter-rouge">false</code> 的 <code class="language-plaintext highlighter-rouge">constexpr</code> 条件表达式，所以这里直接写 <code class="language-plaintext highlighter-rouge">false</code> 肯定不行，通常定义为：</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">always_false</span> <span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">false_type</span> <span class="p">{};</span>
+</code></pre></div></div>
+<p>或</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="o">...</span> <span class="nc">T</span><span class="p">&gt;</span> <span class="kr">inline</span> <span class="k">constexpr</span> <span class="kt">bool</span> <span class="n">always_false</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+</code></pre></div></div>
+<p>这样使用的时候，就可以像下面这样使用：</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">static_assert</span><span class="p">(</span><span class="n">always_false</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">,</span> <span class="s">"..."</span><span class="p">);</span>
+</code></pre></div></div>
+<p>或</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">static_assert</span><span class="p">(</span><span class="n">always_false</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">,</span> <span class="s">"..."</span><span class="p">);</span>
+</code></pre></div></div>
+<p>这个语义十分清楚，但这也有一个缺点，因为这个 <code class="language-plaintext highlighter-rouge">always_false</code> 一般会被定义在项目中的一个公共头文件中，整个项目中都会使用到它，这时如果引入的一个三方项目，很容易碰到相同的 <code class="language-plaintext highlighter-rouge">always_false</code> 定义，这个时候就会有点麻烦了，那么怎么做会避免这种情况发生呢？很简单，不再自己定义 <code class="language-plaintext highlighter-rouge">always_false</code>，我的解决方法如下：</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">static_assert</span><span class="p">(</span><span class="o">!</span><span class="n">std</span><span class="o">::</span><span class="n">is_same_v</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">T</span><span class="o">&gt;</span><span class="p">,</span> <span class="s">"..."</span><span class="p">);</span>
+</code></pre></div></div>
+<p>其中条件为 <code class="language-plaintext highlighter-rouge">!std::is_same_v&lt;T, T&gt;</code> 这样它同 <code class="language-plaintext highlighter-rouge">always_false</code> 一样始终将为 <code class="language-plaintext highlighter-rouge">false</code> 的常量表达式，且不再需要自己去定义那个到处被用到的 <code class="language-plaintext highlighter-rouge">always_false</code> 类型，唯一不足的是降低了一点可读性。</p>
+
+</div>
+
+<div id="related">
+  <h2>Related Posts</h2>
+  <ul class="posts">
+    
+      <li><span>07 Jun 2024</span> - <a href="/2024/06/07/network-library-design.html">网络库常见的糟糕设计有哪些</a></li>
+    
+      <li><span>14 Oct 2023</span> - <a href="/2023/10/14/asio-performance.html">关于 c++ asio 性能小记</a></li>
+    
+      <li><span>28 Jun 2023</span> - <a href="/2023/06/28/email-server-config.html">搭建自己的邮件服务</a></li>
+    
+      <li><span>14 Jun 2023</span> - <a href="/2023/06/14/asio-acceptor-performance.html">关于在 asio 使用 tcp::acceptor 时性能优化</a></li>
+    
+      <li><span>13 Jun 2023</span> - <a href="/2023/06/13/asio-transfer_at_least-performance.html">关于在 asio 使用 transfer_at_least 数据传输时性能优化</a></li>
+    
+  </ul>
+</div>
+
+
+<br />
+<br />
+<hr />
+<div id="comments">
+  <h2>Comments</h2>
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+    var disqus_identifier = "/2023/09/22/static_assert.html";
+    (function() {
+     var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+     dsq.src = '//jack.disqus.com/embed.js';
+     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript=jack">comments powered by Disqus.</a></noscript>
+  <a href="https://disqus.com" class="dsq-brlink">blog comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+
+
+
+      </section>
+    </div>
+  </body>
+</html>
