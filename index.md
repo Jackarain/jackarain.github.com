@@ -1,6 +1,8 @@
 ---
 layout: default
 description: Jackarain 的 blog, 喜欢 c++ 语言，在这里记录一些所见和所思...
+url: https://www.jackarain.org/
+locale: zh_CN
 ---
 
 

@@ -3,6 +3,9 @@ description: Jackarain 的 blog
 google_analytics:
 theme: jekyll-theme-hacker
 
+locale: zh_CN
+url: https://www.jackarain.org
+
 domain: jackarain.org
 author: Jack
 email: jack.wgm@gmail.com

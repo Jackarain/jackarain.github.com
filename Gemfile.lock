@@ -206,6 +206,7 @@ PLATFORMS
 
 DEPENDENCIES
   html-proofer (~> 3.0)
+  jekyll-seo-tag (~> 2.8.0)
   jekyll-theme-hacker!
   rubocop-github (~> 0.16)
   w3c_validators (~> 1.3)
