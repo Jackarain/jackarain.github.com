@@ -1,6 +1,6 @@
 ---
 layout: default
-description: A description about my blog homepage
+description: Jackarain 的 blog, 喜欢 c++ 语言，在这里记录一些所见和所思...
 ---
 
 
