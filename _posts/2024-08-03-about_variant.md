@@ -56,15 +56,15 @@ class http_nossl_socket {
 public:
   virtual int write(const request& req) override
   {
-    return ssl_socket_.write(req);
+    return socket_.write(req);
   }
 
   virtual int read(response& resp) override
   {
-    return ssl_socket_.read(resp);
+    return socket_.read(resp);
   }
 
-  net::ssl_socket ssl_socket_;
+  net::socket socket_;
 };
 ```
 
@@ -85,7 +85,7 @@ class http_client {
 };
 ```
 
-通过虚函数来抽象运行时多态的这种做法，在实现 `http_client` 时变得轻松不少，代码也更清晰简洁，这可能在当时已经是我的最优解了，直到我通过阅读 `libtorrent` 这个开源项目，了解到模板元编程，我找到了另一种方法：
+通过虚函数来抽象运行时多态的这种做法，在实现 `http_client` 时变得轻松不少，代码也更清晰简洁，虽然 `virtual` 是个让人感觉不太舒服的关键字，但这可能在当时已经是我的最优解了，直到我通过阅读 `libtorrent` 这个开源项目，了解到模板元编程，我找到了另一种方法：
 
 ```c++
 template <
@@ -159,7 +159,7 @@ class http_client {
   /// 一些其它实现，略...
 
   void send_request() {
-    socket_->write(request);
+    socket_.write(request);
   }
 
   base_stream<tcp_socket, ssl_stream> socket_;
@@ -168,7 +168,7 @@ class http_client {
 
 相比之前的版本要简洁多了，虽然依然需要实现 `visit`，但这已经不再是障碍，具体项目中使用可参考。
 
-得益于 `variant` 的优秀设计和现代编译器的优化能力，也可以说是遵循了 `c++` 零开销元则，这里给出一个代码 [https://godbolt.org/z/KbsqE3nvv](https://godbolt.org/z/KbsqE3nvv) 用于参考和研究。
+得益于 `variant` 的优秀设计和现代编译器的优化能力，也可以说是遵循了 `c++` 零开销原则，这里给出一个代码 [https://godbolt.org/z/KbsqE3nvv](https://godbolt.org/z/KbsqE3nvv) 用于参考和研究。
 
 在这里，通常我更倾向于使用 `boost.variant2`，因为它不会处于无值状态（无值状态简而言之就是当具体类型构造时发生异常导致构造失败，这也导致 `variant` 处于这个类型的无值状态，这可以看成是错误的，占着茅坑的屎），而标准库的 `std::variant` 则是要求不能在初始化（构造或移动、复制构造）时抛出异常，否则它将进入 `valueless` 状态，可通过 [valueless_by_exception](https://en.cppreference.com/w/cpp/utility/variant/valueless_by_exception) 来检测这个状态。
 
