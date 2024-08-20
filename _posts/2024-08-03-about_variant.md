@@ -170,6 +170,74 @@ class http_client {
 
 得益于 `variant` 的优秀设计和现代编译器的优化能力，也可以说是遵循了 `c++` 零开销原则，这里给出一个代码 [https://godbolt.org/z/KbsqE3nvv](https://godbolt.org/z/KbsqE3nvv) 用于参考和研究。
 
+还有一些关于 std::variant 的应用，比如我们在一个消息处理过程中，以往通常是定义一些消息 ID，然后根据消息 ID 通过 switch 来跳转到具体的消息处理过程，如：
+
+```c++
+enum MessageID {
+  Register,
+  Login,
+  Task,
+  Logout,
+};
+
+void on_register() {
+}
+
+void on_login() {
+}
+
+void on_task() {
+}
+
+void on_logout() {
+}
+
+void process_msg()
+{
+  /// ... 一些无关的实现
+
+  // 消息派发处...
+  switch (id) {
+    case Register: on_register(); break;
+    case Login: on_login(); break;
+    case Task: on_task(); break;
+    case Logout: on_logout(); break;
+  };
+
+}
+```
+
+上面这种实现很普遍，也很容易读懂，如果使用 `std::variant` 来抽象这种需求，可能会更具有一些优势，比如：
+
+```c++
+// 各消息类型参数的结构体类型定义，可以在里面包含业务需要的信息
+struct Register {};
+struct Login {};
+struct Task {};
+struct Logout {};
+
+// 各消息处理函数.
+void on_message(const Register& msg) {}
+void on_message(const Login& msg) {}
+void on_message(const Task& msg) {}
+void on_message(const Logout& msg) {}
+
+// 相当是所有消息共用体.
+using Message = std::variant<Register, Login, Task, Logout>;
+
+void process_msg()
+{
+  /// ... 一些无关的实现
+
+  // 消息派发处...
+  std::visit([](const auto& msg) {
+    on_message(msg);
+  }, msg);
+}
+```
+
+使用 `variant` 的消息派发的抽象模型将不再需要消息ID，这算是一个小的优势方面，直接根据消息的 `c++` 类型来派发消息，从而路由到具体的消息处理函数，这个过程是完全可能被编译器优化成直接调用，从而避免了条件分支，这算是另一个优势的地方。
+
 在这里，通常我更倾向于使用 `boost.variant2`，因为它不会处于无值状态（无值状态简而言之就是当具体类型构造时发生异常导致构造失败，这也导致 `variant` 处于这个类型的无值状态，这可以看成是错误的，占着茅坑的屎），而标准库的 `std::variant` 则是要求不能在初始化（构造或移动、复制构造）时抛出异常，否则它将进入 `valueless` 状态，可通过 [valueless_by_exception](https://en.cppreference.com/w/cpp/utility/variant/valueless_by_exception) 来检测这个状态。
 
 当然，即使使用 `std::variant` 出现 `valueless` 也是小概率，因为绝大部分 `c++` 代码不会在各种构造中去抛异常，因为这有可能会导致资源泄露等很多其它问题，这也是 `c++` 程序员都很忌讳的事情。
