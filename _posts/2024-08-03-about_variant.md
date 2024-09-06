@@ -166,7 +166,7 @@ class http_client {
 };
 ```
 
-相比之前的版本要简洁多了，虽然依然需要实现 `visit`，但这已经不再是障碍，具体项目中[使用参考](https://github.com/Jackarain/proxy/blob/master/proxy/include/proxy/base_stream.hpp)。
+相比之前的版本要简洁多了，虽然依然需要实现 `visit`，但这已经不再是障碍，具体项目中[使用参考](https://github.com/Jackarain/proxy/blob/master/proxy/include/proxy/variant_stream.hpp)。
 
 得益于 `variant` 的优秀设计和现代编译器的优化能力，也可以说是遵循了 `c++` 零开销原则，这里给出一个代码 [https://godbolt.org/z/KbsqE3nvv](https://godbolt.org/z/KbsqE3nvv) 用于参考和研究。
 
