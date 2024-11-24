@@ -31,6 +31,8 @@ title: 关于 c++ asio 性能小记
 
 九、传输大量数据时，使用自定义的 `transfer_at_least` 来提升效率，参考文章：[https://www.jackarain.org/2023/06/13/asio-transfer_at_least-performance.html](https://www.jackarain.org/2023/06/13/asio-transfer_at_least-performance.html)
 
-十、尽量将 `socket` 关闭操作让 `client` 主动发起，以避免服务器上产生过多的 `TIME_WAIT` 状态
+十、尽量将 `socket` 关闭操作让 `client` 主动发起，以避免服务器上产生过多的 `TIME_WAIT` 状态。
+
+十一、避免使用 `std::vector` 或 `std::string` 作为数据收发缓冲，因为它们会引入初始化整个内存的开销，由其是在缓冲区较大的情况下导致的效率问题尤为明显，更何况 `std::string` 用于数据收发缓冲在语义上也不太合适，更高效的作法是使用 `std::array`。
 
 暂时只想到这些，以后想到了再更新，以上可根据需要做取舍。
