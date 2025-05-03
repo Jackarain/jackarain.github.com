@@ -3,26 +3,27 @@
    original base16 by Chris Kempson (https://github.com/chriskempson/base16)
 */
 
-@import "default_colors";
+@use "default_colors";
+@use "default_colors" as colors;
 
 .highlight {
 
-  $plaintext: $alto !default;
-  $string: $chelsea-cucumber !default;
-  $literal: $chelsea-cucumber !default;
-  $keyword: $bouquet !default;
-  $error-foreground: $cod-grey !default;
-  $error-background: $apple-blossom !default;
-  $comment: $grey !default;
-  $preprocessor: $rajah !default;
-  $name-space: $rajah !default;
-  $name-attribute: $hippie-blue !default;
-  $operator: $rajah !default;
-  $keyword-type: $raw-sienna !default;
-  $regex: $gulf-stream !default;
-  $string-escape: $potters-clay !default;
-  $deleted: $apple-blossom !default;
-  $header: $hippie-blue !default;
+  $plaintext: colors.$alto !default;
+  $string: colors.$chelsea-cucumber !default;
+  $literal: colors.$chelsea-cucumber !default;
+  $keyword: colors.$bouquet !default;
+  $error-foreground: colors.$cod-grey !default;
+  $error-background: colors.$apple-blossom !default;
+  $comment: colors.$grey !default;
+  $preprocessor: colors.$rajah !default;
+  $name-space: colors.$rajah !default;
+  $name-attribute: colors.$hippie-blue !default;
+  $operator: colors.$rajah !default;
+  $keyword-type: colors.$raw-sienna !default;
+  $regex: colors.$gulf-stream !default;
+  $string-escape: colors.$potters-clay !default;
+  $deleted: colors.$apple-blossom !default;
+  $header: colors.$hippie-blue !default;
 
   color: $plaintext;
 
