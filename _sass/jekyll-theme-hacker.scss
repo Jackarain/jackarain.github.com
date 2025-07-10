@@ -269,3 +269,43 @@ a {
 #a-title {
   text-decoration: none;
 }
+
+
+.gt-header-textarea {
+  color: #ffffff !important;
+  background-color: #2d2d2d !important; /* 深色背景，适合暗色主题 */
+}
+
+.gt-comment-content {
+  color: #ffffff !important;
+  background-color: #2d2d2d !important; /* 深色背景，适合暗色主题 */
+}
+
+/* 深色模式下统一背景色 */
+@media (prefers-color-scheme: dark) {
+  .gt-header-preview.markdown-body {
+    color: #ffffff !important;
+    background-color: #2d2d2d !important; /* 深色背景，适合暗色主题 */
+  }
+
+  .gt-comment-body.markdown-body {
+    color: #ffffff !important;
+    background-color: #2d2d2d !important; /* 深色背景，适合暗色主题 */
+  }
+
+  #gitalk-container .gt-container .gt-header-preview.markdown-body {
+    background-color: #2d2d2d !important;
+    color: #ffffff !important;
+  }
+  #gitalk-container .gt-container .gt-header-preview.markdown-body * { /* 覆盖子元素的背景色 */
+    background-color: #2d2d2d !important;
+  }
+
+  #gitalk-container .gt-container .gt-comment-body.markdown-body {
+    background-color: #2d2d2d !important;
+    color: #ffffff !important;
+  }
+  #gitalk-container .gt-container .gt-comment-body.markdown-body * { /* 覆盖子元素的背景色 */
+    background-color: #2d2d2d !important;
+  }
+}
