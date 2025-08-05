@@ -64,6 +64,19 @@ secrets:
 dns_cloudflare_api_token = 你的API令牌
 ```
 
+## 启动 Docker 服务
+
+```bash
+docker-compose pull
+docker-compose up -d
+```
+
+若需要停止，则可以
+
+```bash
+docker compose down
+```
+
 ## 生成 DKIM 密钥
 
 执行以下命令生成 DKIM 密钥：
@@ -148,3 +161,5 @@ docker exec -ti mailserver setup email add admin@jackarain.org
   - IMAP: 993 (SSL/TLS)
   - SMTP: 465 (SSL/TLS) 或 587 (STARTTLS)
 - **使用安全连接**: SSL/TLS
+
+至此，邮件服务器已配置完成并可以正常使用。
