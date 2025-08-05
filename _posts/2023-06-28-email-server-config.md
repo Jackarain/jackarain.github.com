@@ -74,7 +74,7 @@ docker-compose up -d
 若需要停止，则可以
 
 ```bash
-docker compose down
+docker-compose down
 ```
 
 ## 生成 DKIM 密钥
