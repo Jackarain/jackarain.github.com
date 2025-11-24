@@ -40,7 +40,101 @@ layout: default
 </div>
 {% endif %}
 
-<div id="sfcypp71j4r7lx2hh15cgtfa6dkb8xnszct"></div>
-<script type="text/javascript" src="https://counter1.optistats.ovh/private/counter.js?c=ypp71j4r7lx2hh15cgtfa6dkb8xnszct&down=async" async>
-</script><noscript><a href="https://www.freecounterstat.com" title="page view counter">
-<img src="https://counter1.optistats.ovh/private/freecounterstat.php?c=ypp71j4r7lx2hh15cgtfa6dkb8xnszct" title="page view counter" alt="page view counter"></a></noscript>
+<div id="visit-counter" class="visit-counter">
+    <span class="counter-label">访问量</span>
+    <span class="counter-number">加载中...</span>
+</div>
+
+<style>
+.visit-counter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: none;
+}
+
+.counter-label {
+    color: #a0aec0;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.counter-number {
+    color: #63b3ed;
+    font-size: 14px;
+    font-weight: 600;
+    min-width: 40px;
+    text-align: right;
+    position: relative;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.counter-number.loaded {
+    opacity: 1;
+}
+
+.counter-number::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.1),
+        transparent
+    );
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    100% {
+        transform: translateX(200%);
+    }
+}
+
+@media (max-width: 480px) {
+    .visit-counter {
+        padding: 6px 10px;
+    }
+
+    .counter-label {
+        font-size: 11px;
+    }
+
+    .counter-number {
+        font-size: 13px;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const currentUrl = encodeURIComponent(window.location.href);
+    fetch('https://www.jackarain.org:8443/', {
+        headers: {
+            'X-Current-URL': currentUrl
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const counterElement = document.querySelector('.counter-number');
+        counterElement.textContent = data.visit_count;
+        counterElement.classList.add('loaded');
+    })
+    .catch(error => {
+        console.error('Error fetching visit counter:', error);
+        const counterElement = document.querySelector('.counter-number');
+        counterElement.textContent = '错误';
+        counterElement.style.color = '#f56565';
+        counterElement.classList.add('loaded');
+    });
+});
+</script>
