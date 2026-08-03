@@ -29,7 +29,7 @@ title: 关于 c++ asio 性能小记
 
 八、慎用 `strand`，如无必要不要盲目使用 `strand`，它主要是被设计在多线程环境中（通常是单个 `io_context` 运行在多线程），可以保证在其上的异步操作串行化而非加锁，而它在单线程中则没有必要。
 
-九、传输大量数据时，使用自定义的 `transfer_at_least` 来提升效率，参考文章：[https://www.jackarain.org/2023/06/13/asio-transfer_at_least-performance.html](https://www.jackarain.org/2023/06/13/asio-transfer_at_least-performance.html)
+九、传输大量数据时，使用自定义的 `transfer_at_least` 来提升效率，参考文章：[https://www.jackarain.org/2023/06/13/asio-transfer_at_least-performance.html](https://www.jackarain.org/2023/06/13/asio-transfer_at_least-performance.html)，并注意在使用 asio::async_write 时，它实际上内部也是按 `default_max_transfer_size` （64k）分块发送的，若需要提高效率同样需要自己 `CompletionCondition` 以提高传输效率，避免过多的系统调用。
 
 十、尽量将 `socket` 关闭操作让 `client` 主动发起，以避免服务器上产生过多的 `TIME_WAIT` 状态。
 
