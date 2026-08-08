@@ -16,7 +16,7 @@ title: 关于 c++ asio 性能小记
 还有的`op`先后需要不同大小的内存块。
 但无论是上面哪种情况，通过定制的 `allocator` 便可完全自如的处理 `asio` 内存分配事宜，参考示例：[https://www.boost.org/doc/libs/1_83_0/doc/html/boost_asio/example/cpp11/allocation/server.cpp](https://www.boost.org/doc/libs/1_83_0/doc/html/boost_asio/example/cpp11/allocation/server.cpp)
 
-三、非紧急事件投递可使用 `defer` 而非 `post`。
+三、非紧急事件投递可使用 `defer` 而非 `post`，另外与此相反的情况，迫切任务调度可使用 `bind_immediate_executor` 来确保任务立即执行。
 
 四、在编写 `tcp server` 时 `listen` 设置恰当的 `backlog`（默认使用 `asio::socket_base::max_listen_connections` 即可）。另外重要的是，同时多次投递 `async_accept` 十分有助于大量客户端频繁连接，单个 `async_accept` 往往会在响应 `handle_accept` 之时，此时无法及时响应客户端的 `connect` 请求。
 参考文章：[https://www.jackarain.org/2023/06/14/asio-acceptor-performance.html](https://www.jackarain.org/2023/06/14/asio-acceptor-performance.html)
