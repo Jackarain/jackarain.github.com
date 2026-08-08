@@ -37,6 +37,6 @@ title: 关于 c++ asio 性能小记
 
 十二、尽可能早的准备好下一次 `io` 事件的准备，必要的时候，可以考虑使用双缓冲来提前投递 `io`。
 
-十三、在使用 `asio` 进行 `tls` 时，需要注意设置恰当的 `max_tls_record_size`，默认值为 `17k`，这会导致 `tls` 会话的 `record` 太小，小的 `max_tls_record_size` 虽然获得了低延迟，吞吐量大的场景下，它会导致系统调用次数增加，目前这里只能通过修改 `asio` 源码来达到这个目的，除此之外，`engine` 中增大的 `BIO pair` 容量与去除 `SSL_MODE_ENABLE_PARTIAL_WRITE`，让 `SSL_write` 一次可加密多个 `TLS record`。
+十三、~~在使用 `asio` 进行 `tls` 时，需要注意设置恰当的 `max_tls_record_size`，默认值为 `17k`，这会导致 `tls` 会话的 `record` 太小，小的 `max_tls_record_size` 虽然获得了低延迟，吞吐量大的场景下，它会导致系统调用次数增加，目前这里只能通过修改 `asio` 源码来达到这个目的，除此之外，`engine` 中增大的 `BIO pair` 容量与去除 `SSL_MODE_ENABLE_PARTIAL_WRITE`，让 `SSL_write` 一次可加密多个 `TLS record`。~~ 已经在 boost-1.92 版本中修复，asio 给 ssl_stream 添加了配置 input/output buffer 大小的参数，可通过适当的配置该参数以避免性能问题。
 
 暂时只想到这些，以后想到了再更新，以上可根据需要做取舍。
